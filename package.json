@@ -1,0 +1,29 @@
+{
+  "name": "pads-to-circuit-json",
+  "version": "0.0.1",
+  "description": "Convert PADS PCB files into Circuit JSON with source-linked diagnostics",
+  "module": "lib/index.ts",
+  "types": "lib/index.ts",
+  "type": "module",
+  "files": ["lib"],
+  "scripts": {
+    "check": "bun run format:check && bun run typecheck && bun test",
+    "format": "biome check --write .",
+    "format:check": "biome check .",
+    "test": "bun test",
+    "typecheck": "bunx tsc --noEmit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tscircuit/pads-to-circuit-json.git"
+  },
+  "keywords": ["pads", "circuit-json", "pcb", "eda", "tscircuit"],
+  "license": "MIT",
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.6",
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}
