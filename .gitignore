@@ -2,6 +2,7 @@
 node_modules
 .cursor
 bun.lock
+/tests/assets/downloaded/
 
 # output
 out
