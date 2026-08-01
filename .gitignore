@@ -2,6 +2,7 @@
 node_modules
 .cursor
 bun.lock
+/tests/assets/downloaded/
 
 # output
 out
@@ -28,6 +29,7 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 .eslintcache
 .cache
 *.tsbuildinfo
+*.diff.png
 
 # IntelliJ based IDEs
 .idea

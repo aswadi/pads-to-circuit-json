@@ -7,10 +7,12 @@
   "type": "module",
   "files": ["lib"],
   "scripts": {
+    "benchmark:ems4": "bun run scripts/benchmark-test-asset.ts ems4-rev2",
     "check": "bun run format:check && bun run typecheck && bun test",
     "format": "biome check --write .",
     "format:check": "biome check .",
     "test": "bun test",
+    "test:download-assets": "bun run scripts/download-test-assets.ts",
     "typecheck": "bunx tsc --noEmit"
   },
   "repository": {
@@ -21,9 +23,25 @@
   "license": "MIT",
   "devDependencies": {
     "@biomejs/biome": "^2.5.6",
-    "@types/bun": "latest"
+    "@tscircuit/alphabet": "0.0.25",
+    "@tscircuit/circuit-json-util": "0.0.102",
+    "@types/bun": "latest",
+    "bun-match-svg": "0.0.15",
+    "circuit-json-to-connectivity-map": "0.0.25",
+    "circuit-to-svg": "0.0.394",
+    "schematic-symbols": "0.0.238",
+    "sharp": "0.35.3",
+    "stack-svgs": "0.0.1",
+    "zod": "3.25.76"
   },
   "peerDependencies": {
     "typescript": "^5"
+  },
+  "dependencies": {
+    "circuit-json": "0.0.456",
+    "padsts": "github:tscircuit/padsts#a01e301"
+  },
+  "overrides": {
+    "sharp": "0.35.3"
   }
 }
