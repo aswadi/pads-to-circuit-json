@@ -10,8 +10,9 @@ emitting 15,961 Circuit JSON elements.
 - resident memory after conversion: at most 512 MiB.
 
 SVG rendering is intentionally excluded because it measures the two external
-renderers and snapshot serialization as well as this adapter. CI visual tests
-have a separate 30-second timeout for the three EMS4 comparison views.
+renderers and snapshot serialization as well as this adapter. The three-view
+EMS4 visual regression test has a separate 90-second timeout to accommodate
+slower shared CI runners without weakening the converter benchmark above.
 
 The converter indexes component geometry by reference in one pass. Component,
 net, and emitted-ID reference resolution use maps or sets so increasing the

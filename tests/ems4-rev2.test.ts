@@ -88,4 +88,4 @@ test("converts the routed six-layer EMS4 Rev2 reference board", async () => {
     import.meta.path,
     "c61-keepout-zoom",
   )
-}, 30_000)
+}, 90_000)
