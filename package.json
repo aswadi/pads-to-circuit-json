@@ -39,7 +39,7 @@
   },
   "dependencies": {
     "circuit-json": "0.0.456",
-    "padsts": "github:tscircuit/padsts#83c8eb0"
+    "padsts": "github:tscircuit/padsts#a01e301"
   },
   "overrides": {
     "sharp": "0.35.3"
