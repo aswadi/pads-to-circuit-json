@@ -7,6 +7,7 @@
   "type": "module",
   "files": ["lib"],
   "scripts": {
+    "benchmark:ems4": "bun run scripts/benchmark-test-asset.ts ems4-rev2",
     "check": "bun run format:check && bun run typecheck && bun test",
     "format": "biome check --write .",
     "format:check": "biome check .",
@@ -38,7 +39,7 @@
   },
   "dependencies": {
     "circuit-json": "0.0.456",
-    "padsts": "github:tscircuit/padsts#6e23a59"
+    "padsts": "github:tscircuit/padsts#83c8eb0"
   },
   "overrides": {
     "sharp": "0.35.3"

@@ -46,3 +46,25 @@ export const createApproximationDiagnostic = ({
   ...(entity.id ? { entityIds: [entity.id] } : {}),
   circuitJsonIds,
 })
+
+export const createInferredDiagnostic = ({
+  code,
+  message,
+  entity,
+  circuitJsonIds,
+  fallbackSource,
+}: {
+  code: string
+  message: string
+  entity: SourceEntity
+  circuitJsonIds: string[]
+  fallbackSource: PadsSourceProvenance
+}): PadsToCircuitJsonDiagnostic => ({
+  code,
+  severity: "warning",
+  category: "inferred",
+  message,
+  source: entity.source ?? fallbackSource,
+  ...(entity.id ? { entityIds: [entity.id] } : {}),
+  circuitJsonIds,
+})

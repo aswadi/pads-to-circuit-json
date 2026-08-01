@@ -44,6 +44,19 @@ export const mapBoard = (context: ConversionContext): void => {
     outline: outlinePoints.map(toCircuitJsonPoint),
     material: "fr4",
   } as AnyCircuitElement)
+  context.mappedEntities.add(outline)
+
+  if (context.geometry.layerCount > 10) {
+    context.diagnostics.push(
+      createApproximationDiagnostic({
+        code: "circuit-json-layer-stack-partially-named",
+        message: `Preserved the ${context.geometry.layerCount}-layer board count, but Circuit JSON currently names at most eight inner copper layers`,
+        entity: outline,
+        circuitJsonIds: [context.boardId],
+        fallbackSource: context.documentSource,
+      }),
+    )
+  }
 
   if (pathHasArcs(outline)) {
     context.diagnostics.push(

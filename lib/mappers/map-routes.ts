@@ -35,9 +35,13 @@ export const mapRoutes = (context: ConversionContext): void => {
       path.source?.sourceId,
       index,
     )
+    const sourceTraceId = path.netName
+      ? context.sourceTraceIdByNetName.get(path.netName)
+      : undefined
     context.circuitJson.push({
       type: "pcb_trace",
       pcb_trace_id: traceId,
+      ...(sourceTraceId ? { source_trace_id: sourceTraceId } : {}),
       route: pathToPolylinePoints(path).map((point) => ({
         route_type: "wire",
         ...toCircuitJsonPoint(point),
@@ -45,6 +49,10 @@ export const mapRoutes = (context: ConversionContext): void => {
         layer,
       })),
     } as AnyCircuitElement)
+    context.mappedEntities.add(path)
+    if (path.netName && !context.pcbTraceIdByNetName.has(path.netName)) {
+      context.pcbTraceIdByNetName.set(path.netName, traceId)
+    }
 
     if (pathHasArcs(path)) {
       context.diagnostics.push(

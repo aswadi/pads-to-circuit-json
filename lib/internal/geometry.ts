@@ -1,8 +1,6 @@
-import type {
-  PadsBoardGeometry,
-  PadsGeometryPath,
-  PadsGeometryPoint,
-} from "padsts"
+import type { PadsBoardGeometry, PadsGeometryPath } from "padsts"
+import { getPolygonArea } from "./polygon"
+import { getTextBoundsPoints } from "./text-bounds"
 
 export interface GeometryBounds {
   minimumX: number
@@ -19,59 +17,96 @@ export const getBoardOutline = (
       (path) =>
         path.kind === "outline" && path.closed && path.points.length >= 3,
     )
-    .sort((first, second) => second.points.length - first.points.length)[0]
+    .sort(
+      (first, second) =>
+        getPolygonArea(second.points) - getPolygonArea(first.points),
+    )[0]
 
-const getComponentPoints = (
+const includePoint = (
+  boundsByReference: Map<string, GeometryBounds>,
+  reference: string | undefined,
+  x: number,
+  y: number,
+): void => {
+  if (!reference || !Number.isFinite(x) || !Number.isFinite(y)) return
+  const bounds = boundsByReference.get(reference)
+  if (!bounds) {
+    boundsByReference.set(reference, {
+      minimumX: x,
+      minimumY: y,
+      maximumX: x,
+      maximumY: y,
+    })
+    return
+  }
+  bounds.minimumX = Math.min(bounds.minimumX, x)
+  bounds.minimumY = Math.min(bounds.minimumY, y)
+  bounds.maximumX = Math.max(bounds.maximumX, x)
+  bounds.maximumY = Math.max(bounds.maximumY, y)
+}
+
+export const getComponentBoundsByReference = (
   geometry: PadsBoardGeometry,
-  reference: string,
-): PadsGeometryPoint[] => [
-  ...geometry.pads
-    .filter((pad) => pad.reference === reference)
-    .flatMap((pad) => [
-      { x: pad.center.x - pad.width / 2, y: pad.center.y - pad.height / 2 },
-      { x: pad.center.x + pad.width / 2, y: pad.center.y + pad.height / 2 },
-    ]),
-  ...geometry.holes
-    .filter((hole) => hole.reference === reference)
-    .flatMap((hole) => [
-      {
-        x: hole.center.x - hole.width / 2,
-        y: hole.center.y - hole.height / 2,
-      },
-      {
-        x: hole.center.x + hole.width / 2,
-        y: hole.center.y + hole.height / 2,
-      },
-    ]),
-  ...geometry.paths
-    .filter((path) => path.reference === reference)
-    .flatMap((path) => path.points),
-  ...geometry.circles
-    .filter((circle) => circle.reference === reference)
-    .flatMap((circle) => [
-      {
-        x: circle.center.x - circle.radius,
-        y: circle.center.y - circle.radius,
-      },
-      {
-        x: circle.center.x + circle.radius,
-        y: circle.center.y + circle.radius,
-      },
-    ]),
-]
+): Map<string, GeometryBounds> => {
+  const boundsByReference = new Map<string, GeometryBounds>()
+  for (const pad of geometry.pads) {
+    includePoint(
+      boundsByReference,
+      pad.reference,
+      pad.center.x - pad.width / 2,
+      pad.center.y - pad.height / 2,
+    )
+    includePoint(
+      boundsByReference,
+      pad.reference,
+      pad.center.x + pad.width / 2,
+      pad.center.y + pad.height / 2,
+    )
+  }
+  for (const hole of geometry.holes) {
+    includePoint(
+      boundsByReference,
+      hole.reference,
+      hole.center.x - hole.width / 2,
+      hole.center.y - hole.height / 2,
+    )
+    includePoint(
+      boundsByReference,
+      hole.reference,
+      hole.center.x + hole.width / 2,
+      hole.center.y + hole.height / 2,
+    )
+  }
+  for (const path of geometry.paths) {
+    for (const point of path.points) {
+      includePoint(boundsByReference, path.reference, point.x, point.y)
+    }
+  }
+  for (const circle of geometry.circles) {
+    includePoint(
+      boundsByReference,
+      circle.reference,
+      circle.center.x - circle.radius,
+      circle.center.y - circle.radius,
+    )
+    includePoint(
+      boundsByReference,
+      circle.reference,
+      circle.center.x + circle.radius,
+      circle.center.y + circle.radius,
+    )
+  }
+  for (const text of geometry.texts) {
+    if (text.role) continue
+    for (const point of getTextBoundsPoints(text)) {
+      includePoint(boundsByReference, text.reference, point.x, point.y)
+    }
+  }
+  return boundsByReference
+}
 
 export const getComponentBounds = (
   geometry: PadsBoardGeometry,
   reference: string,
-): GeometryBounds | undefined => {
-  const points = getComponentPoints(geometry, reference).filter(
-    ({ x, y }) => Number.isFinite(x) && Number.isFinite(y),
-  )
-  if (points.length === 0) return undefined
-  return {
-    minimumX: Math.min(...points.map(({ x }) => x)),
-    minimumY: Math.min(...points.map(({ y }) => y)),
-    maximumX: Math.max(...points.map(({ x }) => x)),
-    maximumY: Math.max(...points.map(({ y }) => y)),
-  }
-}
+): GeometryBounds | undefined =>
+  getComponentBoundsByReference(geometry).get(reference)

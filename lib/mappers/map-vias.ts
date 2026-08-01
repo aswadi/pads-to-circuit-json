@@ -10,13 +10,15 @@ import {
 } from "../internal/diagnostics"
 import { getLayerSpan } from "../internal/layers"
 
-export const mapViasAndDiagnoseCircles = (context: ConversionContext): void => {
+export const mapVias = (context: ConversionContext): void => {
   for (const [index, circle] of context.geometry.circles.entries()) {
-    if (circle.kind !== "via" || circle.drillRadius === undefined) {
+    if (circle.kind !== "via") continue
+    context.handledCircles.add(circle)
+    if (circle.drillRadius === undefined) {
       context.diagnostics.push(
         createSkippedDiagnostic({
-          code: "circuit-json-circle-not-represented",
-          message: `Skipped ${circle.kind} circle because the current adapter only maps drilled vias`,
+          code: "circuit-json-undrilled-via-not-represented",
+          message: "Skipped a via circle because no drill diameter was decoded",
           entity: circle,
           fallbackSource: context.documentSource,
         }),
@@ -53,6 +55,9 @@ export const mapViasAndDiagnoseCircles = (context: ConversionContext): void => {
       circle.source?.sourceId,
       index,
     )
+    const pcbTraceId = circle.netName
+      ? context.pcbTraceIdByNetName.get(circle.netName)
+      : undefined
     context.circuitJson.push({
       type: "pcb_via",
       pcb_via_id: viaId,
@@ -61,7 +66,9 @@ export const mapViasAndDiagnoseCircles = (context: ConversionContext): void => {
       outer_diameter: nanometersToMillimeters(outerRadius * 2),
       hole_diameter: nanometersToMillimeters(circle.drillRadius * 2),
       layers,
+      ...(pcbTraceId ? { pcb_trace_id: pcbTraceId } : {}),
     } as AnyCircuitElement)
+    context.mappedEntities.add(circle)
 
     const padStackKeys = new Set(
       (circle.copperPads ?? []).map(
@@ -79,6 +86,16 @@ export const mapViasAndDiagnoseCircles = (context: ConversionContext): void => {
             "Collapsed per-layer via pad sizes or shapes to one circular maximum outer diameter",
           entity: circle,
           circuitJsonIds: [viaId],
+          fallbackSource: context.documentSource,
+        }),
+      )
+    }
+    if (circle.netName && !pcbTraceId) {
+      context.diagnostics.push(
+        createSkippedDiagnostic({
+          code: "circuit-json-via-net-association-not-represented",
+          message: `Emitted via geometry but could not attach its decoded PADS net ${JSON.stringify(circle.netName)} because that net has no emitted routed PCB trace`,
+          entity: circle,
           fallbackSource: context.documentSource,
         }),
       )

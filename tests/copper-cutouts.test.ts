@@ -3,17 +3,32 @@ import { convertPadsToCircuitJson } from "../lib"
 import { loadTestCase } from "./visual/load-test-case"
 import { renderConversionComparison } from "./visual/render-conversion-comparison"
 
-test("reports compound copper cutouts that are not yet converted", async () => {
+test("converts compound copper regions and their cutouts", async () => {
   const testCase = await loadTestCase("copper-cutouts")
-  const skippedCopper = testCase.conversion.report.diagnostics.filter(
-    ({ code }) => code === "circuit-json-copper-path-not-represented",
-  )
-  const skippedCircles = testCase.conversion.report.diagnostics.filter(
-    ({ code }) => code === "circuit-json-circle-not-represented",
+  const copperPours = testCase.circuitJson.filter(
+    ({ type }) => type === "pcb_copper_pour",
   )
 
-  expect(skippedCopper).toHaveLength(4)
-  expect(skippedCircles).toHaveLength(2)
+  expect(copperPours).toHaveLength(2)
+  expect(copperPours).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        shape: "brep",
+        layer: "top",
+        brep_shape: expect.objectContaining({
+          inner_rings: expect.arrayContaining([
+            expect.objectContaining({ vertices: expect.any(Array) }),
+          ]),
+        }),
+      }),
+      expect.objectContaining({ shape: "brep", layer: "bottom" }),
+    ]),
+  )
+  expect(
+    testCase.conversion.report.diagnostics.filter(
+      ({ code }) => code === "circuit-json-copper-curves-segmented",
+    ),
+  ).toHaveLength(2)
   expect(testCase.conversion.report.lossless).toBe(false)
   const strictResult = convertPadsToCircuitJson(testCase.document, {
     strict: true,
@@ -30,4 +45,13 @@ test("reports compound copper cutouts that are not yet converted", async () => {
 
   const comparisonSvg = renderConversionComparison(testCase)
   await expect(comparisonSvg).toMatchSvgSnapshot(import.meta.path, "comparison")
+
+  const cutoutZoomSvg = renderConversionComparison({
+    ...testCase,
+    boardViewBox: { x: 1.5, y: 0.8, width: 5.9, height: 5.9 },
+  })
+  await expect(cutoutZoomSvg).toMatchSvgSnapshot(
+    import.meta.path,
+    "cutout-zoom",
+  )
 })

@@ -14,12 +14,27 @@ test("converts multilayer via spans", async () => {
     ["inner1", "inner2"],
     ["top", "inner1", "inner2", "bottom"],
   ])
+  expect(vias.every((via) => via.pcb_trace_id === undefined)).toBe(true)
   expect(
     testCase.conversion.report.diagnostics.filter(
       ({ code }) => code === "circuit-json-via-pad-stack-approximated",
     ),
   ).toHaveLength(3)
+  expect(
+    testCase.conversion.report.diagnostics.filter(
+      ({ code }) => code === "circuit-json-via-net-association-not-represented",
+    ),
+  ).toHaveLength(3)
 
   const comparisonSvg = renderConversionComparison(testCase)
   await expect(comparisonSvg).toMatchSvgSnapshot(import.meta.path, "comparison")
+
+  const viaStacksZoomSvg = renderConversionComparison({
+    ...testCase,
+    boardViewBox: { x: 0.9, y: -1.1, width: 8.3, height: 8.3 },
+  })
+  await expect(viaStacksZoomSvg).toMatchSvgSnapshot(
+    import.meta.path,
+    "via-stacks-zoom",
+  )
 })
