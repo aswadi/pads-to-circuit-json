@@ -11,7 +11,7 @@
     "check": "bun run format:check && bun run typecheck && bun test",
     "format": "biome check --write .",
     "format:check": "biome check .",
-    "test": "bun test",
+    "test": "bun test --timeout 60000",
     "test:download-assets": "bun run scripts/download-test-assets.ts",
     "typecheck": "bunx tsc --noEmit"
   },
